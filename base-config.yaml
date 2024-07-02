@@ -9,14 +9,10 @@ vosk:
 
 # Whisper specific config
 whisper:
-    # The name of the whisper model, without the ggml- and .bin.
-    # One of: tiny, tiny.en, base, base.en, small, small.en, medium, medium.en, large-v1, large,
-    # Download from: https://huggingface.co/ggerganov/whisper.cpp/tree/main
-    # Place the model in models/whispercpp/
+    # The name of the whisper model.
+    # One of: tiny, tiny.en, base, base.en, small, small.en, medium, medium.en or large-v{1, 2, 3}.
+    # If not already available, faster-whisper will download the models automatically from HuggingFace.
     model_name: tiny.en
-    # The base directory of the models, either absolute or related to current working directory.
-    # The models should be under a directory called whispercpp under this directory.
-    base_dir: models
 
     # The language of the audio. Set to `auto` for auto-detect
     language: auto

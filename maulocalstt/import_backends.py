@@ -1,13 +1,13 @@
-# Import whispercpp
+# Import faster-whisper
 from typing import Any
 
 try:
-    import whispercpp
+    from faster_whisper import WhisperModel
 
-    WHISPER_INSTALLED = True  # whispercpp is installed
+    WHISPER_INSTALLED = True  # faster-whisper is installed
 except ModuleNotFoundError:
-    whispercpp = type("whispercpp", (object,), {"Whisper": Any})  # Set whispercpp for type hints
-    WHISPER_INSTALLED = False  # whispercpp is not installed
+    faster_whisper = type("faster_whisper", (object,), {"WhisperModel": Any})  # Set faster_whisper for type hints
+    WHISPER_INSTALLED = False  # faster-whisper is not installed
 
 # Import vosk
 try:

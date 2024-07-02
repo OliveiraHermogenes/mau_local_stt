@@ -3,15 +3,10 @@ from asyncio import tasks, StreamReader
 from typing import Tuple, Any, Optional
 
 from mautrix.util.logging import TraceLogger
-import numpy as np
+from io import BytesIO
 import json
 
-from .import_backends import vosk, VOSK_INSTALLED, whispercpp, WHISPER_INSTALLED
-
-if WHISPER_INSTALLED:
-    import numpy as np
-else:
-    np = type('numpy', (object,), {'ndarray': Any})
+from .import_backends import vosk, VOSK_INSTALLED, WhisperModel, WHISPER_INSTALLED
 
 SAMPLE_RATE = 16000
 
@@ -43,27 +38,25 @@ async def _run_ffmpeg(data: bytes, mimeType: str, logger: TraceLogger) -> Tuple[
     return proc.stdout, proc.stderr
     # logger.debug(stderr.decode('utf8'))
 
-
-def _run_whisper(whisper_model: whispercpp.Whisper, data: np.ndarray, logger: TraceLogger):
-    try:
-        return whisper_model.transcribe(data)
-    except Exception as e:
-        logger.exception("Exception when running Whisper", exc_info=e)
-    return "Error"
-
-
-async def transcribe_audio_whisper(data: bytes, whisper_model: whispercpp.Whisper, mimeType: str,
+async def transcribe_audio_whisper(data: bytes, whisper_model: WhisperModel, lang: str, translate: bool,
                                    logger: TraceLogger) -> str:
     if not WHISPER_INSTALLED:
         return ""
 
-    stdout, stderr = await _run_ffmpeg(data, mimeType, logger)
-    data_converted, ffmpeg_log = await tasks.gather(stdout.read(), stderr.read())
-    logger.debug(ffmpeg_log.decode('utf8'))
-    data_numpy = np.frombuffer(data_converted, np.int16).flatten().astype(np.float32) / 32768.0
+    file = BytesIO(data)
 
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, _run_whisper, whisper_model, data_numpy, logger)
+    if translate:
+        action = "translate"
+    else:
+        action = "transcribe"
+        
+    if lang != 'auto':
+        segments, logger = whisper_model.transcribe(file, language=lang, task=action)
+    else:
+        segments, logger = whisper_model.transcribe(file, task=action)
+    
+    result = "".join([segment.text for segment in segments])
+
     return result
 
 
